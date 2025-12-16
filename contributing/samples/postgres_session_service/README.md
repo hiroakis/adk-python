@@ -18,10 +18,10 @@ ADK's `DatabaseSessionService` supports multiple database backends through SQLAl
 
 ## Installation
 
-Install the required async PostgreSQL driver:
+Install the required Python packages:
 
 ```bash
-pip install asyncpg
+pip install google-adk asyncpg greenlet
 ```
 
 ## Database Schema
@@ -138,7 +138,7 @@ Create a `.env` file:
 
 ```bash
 POSTGRES_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/adk_sessions
-GOOGLE_CLOUD_PROJECT={{ your project }}
+GOOGLE_CLOUD_PROJECT=<your-gcp-project-id>
 GOOGLE_CLOUD_LOCATION=us-central1
 GOOGLE_GENAI_USE_VERTEXAI=true
 ```
@@ -152,13 +152,7 @@ export GOOGLE_CLOUD_LOCATION=us-central1
 export GOOGLE_GENAI_USE_VERTEXAI=true
 ```
 
-### 3. Install the required modules
-
-```bash
-pip install google-adk asyncpg greenlet
-```
-
-### 4. Run the Agent
+### 3. Run the Agent
 
 ```bash
 python main.py

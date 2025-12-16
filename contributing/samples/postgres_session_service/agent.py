@@ -14,7 +14,7 @@
 
 """Sample agent demonstrating PostgreSQL session persistence."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from google.adk.agents.llm_agent import Agent
 
@@ -23,9 +23,9 @@ def get_current_time() -> str:
   """Get the current time.
 
   Returns:
-    A string with the current time in ISO format.
+    A string with the current time in ISO 8601 format.
   """
-  return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+  return datetime.now(timezone.utc).isoformat()
 
 
 root_agent = Agent(
