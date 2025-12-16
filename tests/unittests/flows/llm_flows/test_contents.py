@@ -535,3 +535,76 @@ async def test_events_with_empty_content_are_skipped():
           role="user",
       ),
   ]
+
+
+@pytest.mark.asyncio
+async def test_events_with_code_execution_are_included():
+  """Test that events with executable_code and code_execution_result are included."""
+  agent = Agent(model="gemini-2.5-flash", name="test_agent")
+  llm_request = LlmRequest(model="gemini-2.5-flash")
+  invocation_context = await testing_utils.create_invocation_context(
+      agent=agent
+  )
+
+  events = [
+      Event(
+          invocation_id="inv1",
+          author="user",
+          content=types.UserContent("Run some code"),
+      ),
+      # Event with executable_code part
+      Event(
+          invocation_id="inv2",
+          author="test_agent",
+          content=types.Content(
+              parts=[
+                  types.Part(
+                      executable_code=types.ExecutableCode(
+                          code="print('hello')",
+                          language="PYTHON",
+                      )
+                  )
+              ],
+              role="model",
+          ),
+      ),
+      # Event with code_execution_result part
+      Event(
+          invocation_id="inv3",
+          author="test_agent",
+          content=types.Content(
+              parts=[
+                  types.Part(
+                      code_execution_result=types.CodeExecutionResult(
+                          outcome="OUTCOME_OK",
+                          output="hello",
+                      )
+                  )
+              ],
+              role="model",
+          ),
+      ),
+      Event(
+          invocation_id="inv4",
+          author="user",
+          content=types.UserContent("What was the result?"),
+      ),
+  ]
+  invocation_context.session.events = events
+
+  # Process the request
+  async for _ in contents.request_processor.run_async(
+      invocation_context, llm_request
+  ):
+    pass
+
+  # Verify events with executable_code and code_execution_result are included
+  # Consecutive model contents are merged into one content with multiple parts
+  assert len(llm_request.contents) == 3
+  assert llm_request.contents[0] == types.UserContent("Run some code")
+  # The merged model content should have both executable_code and code_execution_result
+  assert llm_request.contents[1].role == "model"
+  assert len(llm_request.contents[1].parts) == 2
+  assert llm_request.contents[1].parts[0].executable_code is not None
+  assert llm_request.contents[1].parts[1].code_execution_result is not None
+  assert llm_request.contents[2] == types.UserContent("What was the result?")

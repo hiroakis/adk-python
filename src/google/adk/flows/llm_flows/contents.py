@@ -246,6 +246,8 @@ def _contains_empty_content(event: Event) -> bool:
           and not p.file_data
           and not p.function_call
           and not p.function_response
+          and not p.executable_code
+          and not p.code_execution_result
           for p in [event.content.parts[0]]
       )
   ) and (not event.output_transcription and not event.input_transcription)
@@ -445,7 +447,24 @@ def _get_contents(
     if content:
       remove_client_function_call_id(content)
       contents.append(content)
-  return contents
+
+  # Merge consecutive contents with the same role.
+  # This is necessary for code execution where executable_code and
+  # code_execution_result are separate events but need to be in the same
+  # Content for the LLM to understand the execution flow.
+  merged_contents = []
+  for content in contents:
+    if (
+        merged_contents
+        and merged_contents[-1].role == content.role
+        and content.role == 'model'
+    ):
+      # Merge parts into the previous content
+      merged_contents[-1].parts.extend(content.parts)
+    else:
+      merged_contents.append(content)
+
+  return merged_contents
 
 
 def _get_current_turn_contents(
