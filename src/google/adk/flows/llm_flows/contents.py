@@ -448,7 +448,7 @@ def _get_contents(
       remove_client_function_call_id(content)
       contents.append(content)
 
-  # Merge consecutive contents with the same role.
+  # Merge consecutive model contents when they contain code execution parts.
   # This is necessary for code execution where executable_code and
   # code_execution_result are separate events but need to be in the same
   # Content for the LLM to understand the execution flow.
@@ -458,6 +458,7 @@ def _get_contents(
         merged_contents
         and merged_contents[-1].role == content.role
         and content.role == 'model'
+        and _should_merge_code_execution_content(merged_contents[-1], content)
     ):
       # Merge parts into the previous content
       merged_contents[-1].parts.extend(content.parts)
@@ -465,6 +466,31 @@ def _get_contents(
       merged_contents.append(content)
 
   return merged_contents
+
+
+def _content_has_code_execution_part(content: types.Content) -> bool:
+  """Check if a content has executable_code or code_execution_result parts."""
+  if not content.parts:
+    return False
+  for part in content.parts:
+    if part.executable_code or part.code_execution_result:
+      return True
+  return False
+
+
+def _should_merge_code_execution_content(
+    prev_content: types.Content, curr_content: types.Content
+) -> bool:
+  """Determine if two consecutive model contents should be merged.
+
+  Only merge when the previous content has executable_code and the current
+  content has code_execution_result. This ensures proper code execution flow
+  is maintained without affecting other consecutive model messages.
+  """
+  return (
+      _content_has_code_execution_part(prev_content)
+      or _content_has_code_execution_part(curr_content)
+  )
 
 
 def _get_current_turn_contents(
