@@ -487,10 +487,9 @@ def _should_merge_code_execution_content(
   content has code_execution_result. This ensures proper code execution flow
   is maintained without affecting other consecutive model messages.
   """
-  return (
-      _content_has_code_execution_part(prev_content)
-      or _content_has_code_execution_part(curr_content)
-  )
+  return _content_has_code_execution_part(
+      prev_content
+  ) or _content_has_code_execution_part(curr_content)
 
 
 def _get_current_turn_contents(
