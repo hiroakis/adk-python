@@ -33,7 +33,8 @@ async def main():
   if not postgres_url:
     raise ValueError(
         "POSTGRES_URL environment variable not set. "
-        "Please create a .env file with POSTGRES_URL=postgresql+asyncpg://user:password@localhost:5432/adk_sessions"
+        "Please create a .env file with"
+        " POSTGRES_URL=postgresql+asyncpg://user:password@localhost:5432/adk_sessions"
     )
 
   app_name = "postgres_session_demo"

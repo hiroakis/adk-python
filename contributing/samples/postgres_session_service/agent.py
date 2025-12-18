@@ -14,7 +14,8 @@
 
 """Sample agent demonstrating PostgreSQL session persistence."""
 
-from datetime import datetime, timezone
+from datetime import datetime
+from datetime import timezone
 
 from google.adk.agents.llm_agent import Agent
 
